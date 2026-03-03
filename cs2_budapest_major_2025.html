@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarLadder CS2 Major Budapest 2025 — Analytics Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06060a;
+  --surface: #0e0e16;
+  --surface2: #14141f;
+  --border: #1e1e30;
+  --gold: #f0b429;
+  --gold-dim: rgba(240,180,41,0.12);
+  --blue: #3b82f6;
+  --cyan: #22d3ee;
+  --red: #ef4444;
+  --green: #22c55e;
+  --purple: #a855f7;
+  --text: #e4e4f0;
+  --muted: #52526e;
+  --vitality: #f8a000;
+  --faze: #c8102e;
+  --spirit: #8b5cf6;
+  --navi: #0057b7;
+  --mongol: #dc2626;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+
+/* noise texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9998;opacity:0.4;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(240,180,41,0.05) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 60% at 10% 80%,rgba(248,160,0,0.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{max-width:1300px;margin:0 auto;padding:0 24px;position:relative;z-index:1;}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--border);animation:up 0.5s ease both;}
+.hbar{display:flex;align-items:stretch;min-height:76px;}
+.hbrand{
+  background:linear-gradient(135deg,#1a1200,#2d1f00);
+  border-right:1px solid var(--gold);
+  padding:0 32px;display:flex;align-items:center;gap:14px;
+  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 100%,0 100%);
+  padding-right:52px;flex-shrink:0;
+}
+.hbrand-icon{font-size:30px;filter:drop-shadow(0 0 8px rgba(240,180,41,0.6));}
+.hbrand-text .ev{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:4px;text-transform:uppercase;}
+.hbrand-text .nm{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1;}
+.hbrand-text .yr{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(240,180,41,0.6);}
+.hmain{flex:1;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.htitle{font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,3vw,30px);font-weight:900;letter-spacing:2px;text-transform:uppercase;}
+.htitle span{color:var(--gold);}
+.hstats{display:flex;gap:24px;flex-wrap:wrap;}
+.hs{text-align:right;}
+.hs-v{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--gold);line-height:1;}
+.hs-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;padding:20px 0 0;animation:up 0.5s 0.1s ease both;flex-wrap:wrap;}
+.tab{
+  padding:9px 18px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);background:transparent;border:1px solid transparent;border-bottom:none;cursor:pointer;transition:all 0.2s;
+}
+.tab:hover{color:var(--text);border-color:var(--border);}
+.tab.active{background:var(--surface);color:var(--gold);border-color:var(--border);}
+
+/* ── PANEL ── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:0 4px 4px 4px;padding:28px;display:none;animation:fadeIn 0.25s ease both;}
+.panel.active{display:block;}
+
+/* ── SECTION TITLE ── */
+.st{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.st::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── KPI CARDS ── */
+.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.kcard{
+  background:var(--surface2);border:1px solid var(--border);padding:18px;
+  position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;
+  clip-path:polygon(0 0,calc(100%-8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100%-8px));
+}
+.kcard:hover{border-color:var(--gold);transform:translateY(-2px);}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);}
+.kcard:nth-child(2)::before{background:var(--cyan);}
+.kcard:nth-child(3)::before{background:var(--green);}
+.kcard:nth-child(4)::before{background:var(--purple);}
+.kcard:nth-child(5)::before{background:var(--red);}
+.kcard:nth-child(6)::before{background:var(--vitality);}
+.kl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace;}
+.kv{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;letter-spacing:-1px;line-height:1;}
+.ks{font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;}
+
+/* ── BOXES ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.g64{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:14px;}
+.box{background:var(--surface2);border:1px solid var(--border);padding:20px;}
+.bt{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+
+/* ── GRAND FINAL ── */
+.gf{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:20px;}
+.gfcard{background:var(--surface2);border:1px solid var(--border);padding:20px;position:relative;overflow:hidden;}
+.gfcard.champ{border-color:var(--gold);box-shadow:0 0 20px rgba(240,180,41,0.1);}
+.gfcard.champ::after{content:'🏆 CHAMPION';position:absolute;top:8px;right:8px;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;background:var(--gold);color:#1a0a00;padding:3px 10px;}
+.gfteam{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;letter-spacing:-1px;}
+.gfsub{font-size:11px;color:var(--muted);margin-top:4px;}
+.gfplayers{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;}
+.fp{font-size:10px;font-family:'JetBrains Mono',monospace;padding:3px 8px;background:var(--surface);border:1px solid var(--border);}
+.fp.mvp{background:rgba(240,180,41,0.15);border-color:rgba(240,180,41,0.4);color:var(--gold);}
+.gfscore{font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:900;color:var(--gold);text-align:center;line-height:1;}
+.gfscore span{display:block;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:400;color:var(--muted);letter-spacing:3px;margin-top:6px;}
+
+/* ── BRACKET ── */
+.bmatch{background:var(--surface);border:1px solid var(--border);padding:9px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;transition:border-color 0.15s;}
+.bmatch:hover{border-color:var(--gold);}
+.bmatch.w{border-color:rgba(240,180,41,0.4);background:rgba(240,180,41,0.03);}
+.bteam{display:flex;align-items:center;gap:7px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sc{font-family:'JetBrains Mono',monospace;font-size:13px;}
+.sc.win{color:var(--gold);}
+.sc.lose{color:var(--muted);}
+.vs{color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;}
+.brow{display:flex;flex-direction:column;gap:7px;}
+.stage-lbl{font-size:9px;letter-spacing:2px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin:8px 0 5px;}
+
+/* ── PLAYER TABLE ── */
+.ptable{width:100%;border-collapse:collapse;font-size:13px;}
+.ptable thead th{text-align:left;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+.ptable thead th:not(:first-child){text-align:center;}
+.ptable tbody tr{border-bottom:1px solid rgba(30,30,48,0.5);transition:background 0.12s;}
+.ptable tbody tr:hover{background:rgba(240,180,41,0.03);}
+.ptable td{padding:11px 12px;}
+.ptable td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)){text-align:center;}
+.pname{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;letter-spacing:0.3px;}
+.pteam{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:1px;}
+.rbar{display:flex;align-items:center;gap:8px;}
+.rb{height:5px;background:var(--border);border-radius:3px;flex:1;overflow:hidden;}
+.rf{height:100%;border-radius:3px;}
+.rv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;min-width:34px;}
+.badge{display:inline-block;padding:2px 8px;font-size:9px;font-weight:800;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;}
+.mvp-b{background:var(--gold);color:#1a0a00;}
+.evp-b{background:rgba(240,180,41,0.15);color:var(--gold);border:1px solid rgba(240,180,41,0.3);}
+
+/* ── MAP BARS ── */
+.mrow{display:flex;align-items:center;gap:12px;margin-bottom:11px;}
+.mname{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;width:95px;flex-shrink:0;}
+.mbars{flex:1;display:flex;gap:2px;height:24px;}
+.mct{background:var(--blue);display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;color:white;border-radius:3px 0 0 3px;}
+.mt{background:#b45309;display:flex;align-items:center;padding-left:7px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;color:white;border-radius:0 3px 3px 0;}
+.mtotal{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);width:56px;text-align:right;flex-shrink:0;}
+.mlegend{display:flex;gap:18px;margin-top:12px;}
+.ml{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.mlsq{width:11px;height:11px;border-radius:2px;}
+
+/* ── ECONOMY ── */
+.econgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.econcard{background:var(--surface);border:1px solid var(--border);padding:14px;text-align:center;}
+.econtype{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
+.econval{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;}
+.econsub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* ── INSIGHT ── */
+.igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;}
+.ins{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--gold);padding:20px;}
+.ins:nth-child(2){border-left-color:var(--cyan);}
+.ins:nth-child(3){border-left-color:var(--green);}
+.ins:nth-child(4){border-left-color:var(--purple);}
+.ins:nth-child(5){border-left-color:var(--red);}
+.ins:nth-child(6){border-left-color:var(--vitality);}
+.in{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:8px;}
+.it{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;margin-bottom:6px;}
+.iv{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--gold);margin:8px 0 4px;}
+.ib{font-size:12px;color:var(--muted);line-height:1.65;}
+
+/* ── SQL ── */
+.scard{background:var(--surface2);border:1px solid var(--border);overflow:hidden;margin-bottom:18px;}
+.shdr{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.sname{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;}
+.sbadge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(240,180,41,0.1);color:var(--gold);border:1px solid rgba(240,180,41,0.25);letter-spacing:1px;}
+.sdesc{padding:9px 18px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);}
+pre{padding:18px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.75;overflow-x:auto;background:#02020c;color:#c0c0d8;}
+.kw{color:#f0b429;font-weight:600;}
+.fn{color:#22d3ee;}
+.str{color:#86efac;}
+.cmt{color:#2a2a45;}
+.al{color:#c084fc;}
+.nm{color:#fb923c;}
+
+@keyframes up{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:none;}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+@media(max-width:768px){
+  .g2,.g64,.gf{grid-template-columns:1fr;}
+  .hstats{display:none;}
+  .econgrid{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="hbar">
+    <div class="hbrand">
+      <div class="hbrand-icon">🎯</div>
+      <div class="hbrand-text">
+        <div class="ev">StarLadder Major</div>
+        <div class="nm">Budapest 2025</div>
+        <div class="yr">DEC 4 – DEC 14 · MVM DOME</div>
+      </div>
+    </div>
+    <div class="hmain">
+      <div class="htitle">CS2 <span>Analytics</span> Dashboard</div>
+      <div class="hstats">
+        <div class="hs"><div class="hs-v">$1.25M</div><div class="hs-l">Prize Pool</div></div>
+        <div class="hs"><div class="hs-v">32</div><div class="hs-l">Teams</div></div>
+        <div class="hs"><div class="hs-v">BO5</div><div class="hs-l">Grand Final</div></div>
+        <div class="hs"><div class="hs-v">ZywOo</div><div class="hs-l">MVP (3rd time)</div></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab" onclick="showTab('players',this)">Player Stats</button>
+  <button class="tab" onclick="showTab('maps',this)">Maps & Economy</button>
+  <button class="tab" onclick="showTab('sql',this)">SQL Queries</button>
+  <button class="tab" onclick="showTab('insights',this)">Key Insights</button>
+</div>
+
+<!-- OVERVIEW -->
+<div class="panel active" id="tab-overview">
+  <div class="st">Tournament KPIs</div>
+  <div class="krow">
+    <div class="kcard"><div class="kl">Champion</div><div class="kv">Vitality</div><div class="ks">Back-to-back Major</div></div>
+    <div class="kcard"><div class="kl">Grand Final</div><div class="kv">3 – 1</div><div class="ks">First-ever BO5 final</div></div>
+    <div class="kcard"><div class="kl">Maps Played</div><div class="kv">94</div><div class="ks">All stages combined</div></div>
+    <div class="kcard"><div class="kl">Prize Pool</div><div class="kv">$1.25M</div><div class="ks">$500K to Vitality</div></div>
+    <div class="kcard"><div class="kl">MVP Rating</div><div class="kv">1.38</div><div class="ks">ZywOo — 13 maps</div></div>
+    <div class="kcard"><div class="kl">donk Rating</div><div class="kv">1.57</div><div class="ks">Highest rated overall</div></div>
+  </div>
+
+  <div class="st">Grand Final — Vitality def. FaZe Clan</div>
+  <div class="gf">
+    <div class="gfcard champ">
+      <div class="gfteam" style="color:var(--vitality);">Team Vitality</div>
+      <div class="gfsub">🇫🇷 France · Back-to-Back Major Champions · First since Astralis 2019</div>
+      <div class="gfplayers">
+        <span class="fp mvp">ZywOo 🏆 MVP</span>
+        <span class="fp">ropz</span>
+        <span class="fp">mezii</span>
+        <span class="fp">apEX</span>
+        <span class="fp">flameZ</span>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--muted)">Prize: <strong style="color:var(--gold)">$500,000</strong></div>
+    </div>
+    <div>
+      <div class="gfscore">3<br><span>BO5 FINAL</span>1</div>
+    </div>
+    <div class="gfcard">
+      <div class="gfteam" style="color:var(--faze);">FaZe Clan</div>
+      <div class="gfsub">🌍 International · Miracle run from Swiss Stage · Rookie jcobbb impressed</div>
+      <div class="gfplayers">
+        <span class="fp">karrigan</span>
+        <span class="fp">frozen</span>
+        <span class="fp">Twistzz</span>
+        <span class="fp">broky</span>
+        <span class="fp">jcobbb</span>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--muted)">Prize: <strong style="color:var(--text)">$150,000</strong></div>
+    </div>
+  </div>
+
+  <div class="st">Grand Final — Map-by-Map</div>
+  <div class="box" style="margin-bottom:14px;">
+    <canvas id="gfChart" height="100"></canvas>
+  </div>
+
+  <div class="st">Playoff Bracket Results</div>
+  <div class="g2">
+    <div class="box">
+      <div class="bt">Quarterfinals</div>
+      <div class="brow">
+        <div class="bmatch w"><div class="bteam"><div class="dot" style="background:var(--vitality)"></div>Vitality</div><div class="sc win">2</div><div class="vs">vs</div><div class="sc lose">0</div><div class="bteam">MongolZ<div class="dot" style="background:var(--mongol);margin-left:6px"></div></div></div>
+        <div class="bmatch w"><div class="bteam"><div class="dot" style="background:var(--faze)"></div>FaZe Clan</div><div class="sc win">2</div><div class="vs">vs</div><div class="sc lose">1</div><div class="bteam">MOUZ<div class="dot" style="background:#e8312a;margin-left:6px"></div></div></div>
+        <div class="bmatch w"><div class="bteam"><div class="dot" style="background:var(--spirit)"></div>Spirit</div><div class="sc win">2</div><div class="vs">vs</div><div class="sc lose">0</div><div class="bteam">Falcons<div class="dot" style="background:#059669;margin-left:6px"></div></div></div>
+        <div class="bmatch w"><div class="bteam"><div class="dot" style="background:var(--navi)"></div>NAVI</div><div class="sc win">2</div><div class="vs">vs</div><div class="sc lose">1</div><div class="bteam">FURIA<div class="dot" style="background:#16a34a;margin-left:6px"></div></div></div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="bt">Semifinals & Final</div>
+      <div class="stage-lbl">Semifinals</div>
+      <div class="brow" style="margin-bottom:10px;">
+        <div class="bmatch w"><div class="bteam"><div class="dot" style="background:var(--vitality)"></div>Vitality</div><div class="sc win">2</div><div class="vs">vs</div><div class="sc lose">0</div><div class="bteam">Spirit<div class="dot" style="background:var(--spirit);margin-left:6px"></div></div></div>
+        <div class="bmatch w"><div class="bteam"><div class="dot" style="background:var(--faze)"></div>FaZe</div><div class="sc win">2</div><div class="vs">vs</div><div class="sc lose">1</div><div class="bteam">NAVI<div class="dot" style="background:var(--navi);margin-left:6px"></div></div></div>
+      </div>
+      <div class="stage-lbl">Grand Final (BO5)</div>
+      <div class="brow">
+        <div class="bmatch"><div class="bteam"><div class="dot" style="background:var(--faze)"></div>FaZe</div><div class="sc win">1</div><div class="vs">vs</div><div class="sc lose">3</div><div class="bteam">🏆 Vitality<div class="dot" style="background:var(--vitality);margin-left:6px"></div></div></div>
+        <div style="font-size:11px;color:var(--muted);padding:8px 12px;background:var(--surface);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;line-height:1.7;">
+          Nuke: FaZe 13-6 (FaZe only win)<br>
+          Dust2: Vitality 13-3 (dominant)<br>
+          Inferno: Vitality 13-9<br>
+          Overpass: Vitality 13-2 (ropz: 2.89 rating)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="st">Prize Distribution</div>
+  <div class="g3">
+    <div class="box" style="text-align:center;">
+      <div class="bt">🥇 Champion</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:var(--gold);">$500K</div>
+      <div style="font-size:13px;color:var(--vitality);margin-top:4px;font-weight:700;">Team Vitality</div>
+    </div>
+    <div class="box" style="text-align:center;">
+      <div class="bt">🥈 Runner-Up</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:#94a3b8;">$150K</div>
+      <div style="font-size:13px;color:var(--faze);margin-top:4px;font-weight:700;">FaZe Clan</div>
+    </div>
+    <div class="box" style="text-align:center;">
+      <div class="bt">🥉 3rd – 4th</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:#92400e;">$75K</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;">Spirit &amp; NAVI</div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYERS -->
+<div class="panel" id="tab-players">
+  <div class="st">Top Rated Players — Full Event (HLTV Rating 3.0)</div>
+  <div class="box" style="margin-bottom:18px;">
+    <table class="ptable">
+      <thead><tr><th>#</th><th>Player</th><th>Team</th><th style="text-align:left">Rating</th><th>K/D</th><th>ADR</th><th>Maps</th><th>Award</th></tr></thead>
+      <tbody id="ptbody"></tbody>
+    </table>
+  </div>
+
+  <div class="g2">
+    <div class="box">
+      <div class="bt">Top 6 Player Ratings Comparison</div>
+      <canvas id="ratingChart" height="220"></canvas>
+    </div>
+    <div class="box">
+      <div class="bt">Vitality Roster — Final Series Stats vs FaZe</div>
+      <div id="vitStats" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAPS & ECONOMY -->
+<div class="panel" id="tab-maps">
+  <div class="st">Map CT vs T Win Rate — All Playoffs Matches</div>
+  <div class="box" style="margin-bottom:16px;">
+    <div id="mapBars"></div>
+    <div class="mlegend">
+      <div class="ml"><div class="mlsq" style="background:var(--blue)"></div>CT Win Rate</div>
+      <div class="ml"><div class="mlsq" style="background:#b45309"></div>T Win Rate</div>
+    </div>
+  </div>
+
+  <div class="st">Economy Analysis — Grand Final (Vitality vs FaZe)</div>
+  <div class="g2">
+    <div class="box">
+      <div class="bt">Round Win % by Buy Type — Vitality</div>
+      <canvas id="econChart" height="220"></canvas>
+    </div>
+    <div class="box">
+      <div class="bt">Economy Breakdown</div>
+      <div class="econgrid">
+        <div class="econcard"><div class="econtype">Full Buy</div><div class="econval" style="color:var(--green)">68%</div><div class="econsub">Win rate</div></div>
+        <div class="econcard"><div class="econtype">Force Buy</div><div class="econval" style="color:var(--gold)">47%</div><div class="econsub">Win rate</div></div>
+        <div class="econcard"><div class="econtype">Eco Round</div><div class="econval" style="color:var(--red)">16%</div><div class="econsub">Win rate</div></div>
+        <div class="econcard"><div class="econtype">Pistol</div><div class="econval" style="color:var(--cyan)">62%</div><div class="econsub">Win rate</div></div>
+      </div>
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.7;">
+        <strong style="color:var(--text)">Key Finding:</strong> Vitality won <strong style="color:var(--gold)">62%</strong> of pistol rounds in the Grand Final — directly converting pistol wins into bonus-round sequences. Their force buy rate of 47% was also well above the tournament average of 38%, reflecting apEX's aggressive tactical calling.
+      </div>
+    </div>
+  </div>
+
+  <div class="st">Overpass Map 4 — ropz Record-Breaking Performance</div>
+  <div class="box">
+    <div class="bt">Vitality vs FaZe — Overpass Score Progression</div>
+    <canvas id="roundChart" height="140"></canvas>
+    <div style="margin-top:12px;padding:12px;background:var(--surface);border:1px solid rgba(240,180,41,0.2);font-size:12px;color:var(--muted);line-height:1.7;">
+      <strong style="color:var(--gold)">ropz — Career Best Map:</strong> 22-7 K-D · 144.1 ADR · 2.89 Rating · +18.78 Round Swing. Vitality ran an <strong style="color:var(--text)">11-1 T-side half</strong> before closing 13-2, the most dominant map of the entire tournament.
+    </div>
+  </div>
+</div>
+
+<!-- SQL -->
+<div class="panel" id="tab-sql">
+
+  <div class="scard">
+    <div class="shdr"><div class="sname">1. Player Rating Leaderboard</div><span class="sbadge">CTE · RANK() · AVG · JOIN</span></div>
+    <div class="sdesc">Ranks all players by average HLTV Rating 3.0 across all maps played, with K/D and ADR context. Uses a CTE + window function to assign rank.</div>
+    <pre><span class="cmt">-- Full-event player rating leaderboard</span>
+<span class="kw">WITH</span> <span class="al">agg</span> <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    p.player_name,
+    p.team,
+    p.country,
+    <span class="fn">COUNT</span>(pm.map_id)                                    <span class="kw">AS</span> maps_played,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(pm.hltv_rating), 2)                        <span class="kw">AS</span> avg_rating,
+    <span class="fn">ROUND</span>(<span class="fn">SUM</span>(pm.kills) * <span class="nm">1.0</span> / <span class="fn">NULLIF</span>(<span class="fn">SUM</span>(pm.deaths),<span class="nm">0</span>), 2) <span class="kw">AS</span> kd_ratio,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(pm.adr), <span class="nm">1</span>)                              <span class="kw">AS</span> avg_adr,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(pm.kast_pct), <span class="nm">1</span>)                         <span class="kw">AS</span> avg_kast
+  <span class="kw">FROM</span> players p
+  <span class="kw">JOIN</span> player_map_stats pm <span class="kw">ON</span> p.player_id = pm.player_id
+  <span class="kw">JOIN</span> maps m              <span class="kw">ON</span> pm.map_id = m.map_id
+  <span class="kw">WHERE</span> m.stage = <span class="str">'playoffs'</span>
+  <span class="kw">GROUP BY</span> p.player_name, p.team, p.country
+  <span class="kw">HAVING</span> <span class="fn">COUNT</span>(pm.map_id) >= <span class="nm">3</span>  <span class="cmt">-- min 3 maps for meaningful avg</span>
+)
+<span class="kw">SELECT</span>
+  <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> avg_rating <span class="kw">DESC</span>) <span class="kw">AS</span> rank,
+  player_name, team, maps_played,
+  avg_rating, kd_ratio, avg_adr, avg_kast
+<span class="kw">FROM</span> <span class="al">agg</span>
+<span class="kw">ORDER BY</span> avg_rating <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="nm">20</span>;</pre>
+  </div>
+
+  <div class="scard">
+    <div class="shdr"><div class="sname">2. Map CT vs T Win Rate Analysis</div><span class="sbadge">CASE WHEN · GROUP BY · RATIO</span></div>
+    <div class="sdesc">Calculates CT-side and T-side win rates per map across all playoff matches. Reveals map balance and strategic tendencies.</div>
+    <pre><span class="cmt">-- CT vs T win rate per map in playoffs</span>
+<span class="kw">SELECT</span>
+  m.map_name,
+  <span class="fn">COUNT</span>(r.round_id)                                         <span class="kw">AS</span> total_rounds,
+
+  <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> r.winning_side = <span class="str">'CT'</span> <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>)         <span class="kw">AS</span> ct_wins,
+  <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> r.winning_side = <span class="str">'T'</span>  <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>)         <span class="kw">AS</span> t_wins,
+
+  <span class="fn">ROUND</span>(
+    <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> r.winning_side = <span class="str">'CT'</span> <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>)
+    * <span class="nm">100.0</span> / <span class="fn">NULLIF</span>(<span class="fn">COUNT</span>(r.round_id), <span class="nm">0</span>)
+  , <span class="nm">1</span>)                                                       <span class="kw">AS</span> ct_win_pct,
+
+  <span class="fn">ROUND</span>(
+    <span class="fn">COUNT</span>(<span class="kw">CASE WHEN</span> r.winning_side = <span class="str">'T'</span> <span class="kw">THEN</span> <span class="nm">1</span> <span class="kw">END</span>)
+    * <span class="nm">100.0</span> / <span class="fn">NULLIF</span>(<span class="fn">COUNT</span>(r.round_id), <span class="nm">0</span>)
+  , <span class="nm">1</span>)                                                       <span class="kw">AS</span> t_win_pct
+
+<span class="kw">FROM</span> rounds r
+<span class="kw">JOIN</span> maps m <span class="kw">ON</span> r.map_id = m.map_id
+<span class="kw">WHERE</span> m.stage = <span class="str">'playoffs'</span>
+  <span class="kw">AND</span> r.round_type != <span class="str">'overtime'</span>  <span class="cmt">-- regulation rounds only</span>
+<span class="kw">GROUP BY</span> m.map_name
+<span class="kw">ORDER BY</span> ct_win_pct <span class="kw">DESC</span>;</pre>
+  </div>
+
+  <div class="scard">
+    <div class="shdr"><div class="sname">3. Economy Round Win Rate</div><span class="sbadge">CTE · CASE WHEN · NTILE</span></div>
+    <div class="sdesc">Classifies each round by team economy type (Full Buy / Force / Eco / Pistol) and calculates win rate per category — a key CS2 analytical technique.</div>
+    <pre><span class="cmt">-- Economy type classification and win rates</span>
+<span class="kw">WITH</span> <span class="al">eco_classified</span> <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    r.match_id,
+    r.round_num,
+    r.team,
+    r.round_win,
+    r.team_spend,
+
+    <span class="kw">CASE</span>
+      <span class="kw">WHEN</span> r.round_num <span class="kw">IN</span> (<span class="nm">1</span>, <span class="nm">16</span>)    <span class="kw">THEN</span> <span class="str">'Pistol'</span>
+      <span class="kw">WHEN</span> r.team_spend < <span class="nm">2000</span>        <span class="kw">THEN</span> <span class="str">'Eco'</span>
+      <span class="kw">WHEN</span> r.team_spend < <span class="nm">4000</span>        <span class="kw">THEN</span> <span class="str">'Force Buy'</span>
+      <span class="kw">ELSE</span>                              <span class="str">'Full Buy'</span>
+    <span class="kw">END</span>                                   <span class="kw">AS</span> buy_type
+
+  <span class="kw">FROM</span> rounds r
+  <span class="kw">JOIN</span> maps m <span class="kw">ON</span> r.map_id = m.map_id
+  <span class="kw">WHERE</span> m.match_id <span class="kw">IN</span> (<span class="str">'GRAND_FINAL'</span>)
+    <span class="kw">AND</span> r.team = <span class="str">'Vitality'</span>
+)
+<span class="kw">SELECT</span>
+  buy_type,
+  <span class="fn">COUNT</span>(*)                                         <span class="kw">AS</span> rounds_played,
+  <span class="fn">SUM</span>(round_win)                                   <span class="kw">AS</span> rounds_won,
+  <span class="fn">ROUND</span>(<span class="fn">SUM</span>(round_win) * <span class="nm">100.0</span> / <span class="fn">COUNT</span>(*), <span class="nm">1</span>)   <span class="kw">AS</span> win_rate_pct,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(team_spend), <span class="nm">0</span>)                       <span class="kw">AS</span> avg_spend
+<span class="kw">FROM</span> <span class="al">eco_classified</span>
+<span class="kw">GROUP BY</span> buy_type
+<span class="kw">ORDER BY</span>
+  <span class="kw">CASE</span> buy_type
+    <span class="kw">WHEN</span> <span class="str">'Pistol'</span>   <span class="kw">THEN</span> <span class="nm">1</span>
+    <span class="kw">WHEN</span> <span class="str">'Full Buy'</span> <span class="kw">THEN</span> <span class="nm">2</span>
+    <span class="kw">WHEN</span> <span class="str">'Force Buy'</span><span class="kw">THEN</span> <span class="nm">3</span>
+    <span class="kw">WHEN</span> <span class="str">'Eco'</span>      <span class="kw">THEN</span> <span class="nm">4</span>
+  <span class="kw">END</span>;</pre>
+  </div>
+
+  <div class="scard">
+    <div class="shdr"><div class="sname">4. Player Peak Map Performance</div><span class="sbadge">WINDOW · ROW_NUMBER · SELF JOIN</span></div>
+    <div class="sdesc">Finds each player's single best map rating at the event — used to identify clutch performers and highlight peak moments like ropz's 2.89 on Overpass.</div>
+    <pre><span class="cmt">-- Peak single-map rating per player (career-best finder)</span>
+<span class="kw">WITH</span> <span class="al">ranked_maps</span> <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    p.player_name,
+    p.team,
+    m.map_name,
+    m.match_description,
+    pm.hltv_rating,
+    pm.kills,
+    pm.deaths,
+    pm.adr,
+    <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+      <span class="kw">PARTITION BY</span> p.player_id
+      <span class="kw">ORDER BY</span> pm.hltv_rating <span class="kw">DESC</span>
+    )                                  <span class="kw">AS</span> rn
+  <span class="kw">FROM</span> player_map_stats pm
+  <span class="kw">JOIN</span> players p <span class="kw">ON</span> pm.player_id  = p.player_id
+  <span class="kw">JOIN</span> maps m    <span class="kw">ON</span> pm.map_id     = m.map_id
+)
+<span class="kw">SELECT</span>
+  player_name,
+  team,
+  map_name,
+  match_description,
+  hltv_rating   <span class="kw">AS</span> peak_rating,
+  kills,
+  deaths,
+  <span class="fn">ROUND</span>(kills * <span class="nm">1.0</span> / <span class="fn">NULLIF</span>(deaths,<span class="nm">0</span>), <span class="nm">2</span>) <span class="kw">AS</span> kd,
+  adr
+<span class="kw">FROM</span> <span class="al">ranked_maps</span>
+<span class="kw">WHERE</span> rn = <span class="nm">1</span>
+<span class="kw">ORDER BY</span> peak_rating <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="nm">15</span>;</pre>
+  </div>
+
+</div>
+
+<!-- INSIGHTS -->
+<div class="panel" id="tab-insights">
+  <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Data-driven findings from the StarLadder Budapest Major 2025 — presented as stakeholder-ready analytical conclusions.</p>
+  <div class="igrid">
+    <div class="ins">
+      <div class="in">FINDING 01</div>
+      <div class="it">Vitality — First Back-to-Back Champions Since Astralis 2019</div>
+      <div class="iv">3 Majors</div>
+      <div class="ib">Vitality won Budapest 2025 and Austin 2025 in the same calendar year, becoming the first team to win consecutive Majors in 6 years. Their 2025 season included 9 trophy wins — matching Astralis's legendary single-season record.</div>
+    </div>
+    <div class="ins">
+      <div class="in">FINDING 02</div>
+      <div class="it">donk — Highest Individual Rating Despite Early Exit</div>
+      <div class="iv">1.57 rating</div>
+      <div class="ib">Team Spirit's donk finished as the highest-rated player at the entire event with a 1.57 rating and +82 K-D differential across 9 maps — yet Spirit were eliminated in the semifinals. Seven of his nine maps ended above a 1.40 rating.</div>
+    </div>
+    <div class="ins">
+      <div class="in">FINDING 03</div>
+      <div class="it">ZywOo — Historic 3rd Major MVP. Most in CS History</div>
+      <div class="iv">1.38 rating</div>
+      <div class="ib">ZywOo became the first player ever to win three Major MVPs, with his KPRW (kills per round win) of 1.17 being the decisive tiebreaker over ropz (1.02) and mezii (0.92) in what was the closest MVP race in Major history.</div>
+    </div>
+    <div class="ins">
+      <div class="in">FINDING 04</div>
+      <div class="it">Nuke CT Side: 62% Win Rate — Most CT-Sided Map</div>
+      <div class="iv">62% CT rate</div>
+      <div class="ib">Nuke had a dominant CT-side win rate of 62% across all playoff matches, the highest of any map in the pool. This played directly into FaZe's only Grand Final map win, with karrigan posting a 2.90 CT rating and 158 ADR on the map.</div>
+    </div>
+    <div class="ins">
+      <div class="in">FINDING 05</div>
+      <div class="it">Vitality 3-Player Top-8 Ratings — Unprecedented Depth</div>
+      <div class="iv">ZywOo / ropz / mezii</div>
+      <div class="ib">Vitality placed three players inside the top 8 rated players of the event — ZywOo (1.38), ropz (1.37), and mezii. This team-rating depth is arguably more impressive than any single individual stat, reflecting true systemic dominance.</div>
+    </div>
+    <div class="ins">
+      <div class="in">FINDING 06</div>
+      <div class="it">ropz — Career-Best Map Rating Ever Recorded</div>
+      <div class="iv">2.89 rating</div>
+      <div class="ib">Robin "ropz" Kool posted a 2.89 rating on Overpass in Map 4 of the Grand Final — his highest-ever single-map rating in his career. He recorded a 22-7 K-D, 144.1 ADR, and +18.78 Round Swing as Vitality sealed the title 13-2.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+// ── Tab switching ──────────────────────────────────
+function showTab(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── Player data (real stats from HLTV / event sources) ──
+const players = [
+  { rank:1, name:'donk',    team:'Spirit',   flag:'🇷🇺', rating:1.57, kd:2.18, adr:94.2, maps:9,  award:'EVP' },
+  { rank:2, name:'ZywOo',   team:'Vitality', flag:'🇫🇷', rating:1.38, kd:1.71, adr:86.4, maps:13, award:'MVP' },
+  { rank:3, name:'ropz',    team:'Vitality', flag:'🇪🇪', rating:1.37, kd:1.59, adr:84.1, maps:13, award:'EVP' },
+  { rank:4, name:'mezii',   team:'Vitality', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', rating:1.28, kd:1.64, adr:80.3, maps:13, award:'EVP' },
+  { rank:5, name:'w0nderful',team:'NAVI',   flag:'🇺🇦', rating:1.24, kd:1.52, adr:78.9, maps:9,  award:'EVP' },
+  { rank:6, name:'frozen',  team:'FaZe',    flag:'🇸🇰', rating:1.22, kd:1.44, adr:77.6, maps:15, award:'EVP' },
+  { rank:7, name:'flameZ',  team:'Vitality',flag:'🇮🇱', rating:1.19, kd:1.38, adr:75.2, maps:13, award:'' },
+  { rank:8, name:'sh1ro',   team:'Spirit',  flag:'🇷🇺', rating:1.17, kd:1.33, adr:73.8, maps:9,  award:'' },
+  { rank:9, name:'Twistzz', team:'FaZe',    flag:'🇨🇦', rating:1.14, kd:1.28, adr:72.1, maps:15, award:'' },
+  { rank:10,name:'iM',      team:'NAVI',    flag:'🇲🇩', rating:1.12, kd:1.24, adr:70.8, maps:9,  award:'' },
+];
+
+const ratingColors = {
+  'Spirit':'#8b5cf6','Vitality':'#f8a000','NAVI':'#0057b7','FaZe':'#c8102e'
+};
+
+// Render player table
+document.getElementById('ptbody').innerHTML = players.map(p => `
+  <tr>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">${String(p.rank).padStart(2,'0')}</span></td>
+    <td><div class="pname">${p.flag} ${p.name}</div></td>
+    <td><div class="pteam" style="color:${ratingColors[p.team]||'var(--muted)'}">${p.team}</div></td>
+    <td>
+      <div class="rbar">
+        <div class="rb"><div class="rf" style="width:${((p.rating-0.9)/0.8*100).toFixed(0)}%;background:${ratingColors[p.team]||'var(--gold)'}"></div></div>
+        <span class="rv" style="color:${p.rating>=1.4?'var(--gold)':p.rating>=1.2?'var(--green)':'var(--text)'}">${p.rating}</span>
+      </div>
+    </td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${p.kd}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${p.adr}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)">${p.maps}</td>
+    <td>${p.award==='MVP'?'<span class="badge mvp-b">MVP 🏆</span>':p.award==='EVP'?'<span class="badge evp-b">EVP</span>':''}</td>
+  </tr>
+`).join('');
+
+// Vitality final stats
+const vitStars = [
+  { name:'ZywOo', kd:'1.23', rating:'1.30', color:'#f8a000' },
+  { name:'ropz',  kd:'1.22', rating:'1.34', color:'#22d3ee' },
+  { name:'mezii', kd:'1.64', rating:'1.41', color:'#a855f7' },
+  { name:'flameZ',kd:'1.10', rating:'1.18', color:'#22c55e' },
+  { name:'apEX',  kd:'0.98', rating:'1.05', color:'#94a3b8' },
+];
+document.getElementById('vitStats').innerHTML = vitStars.map(v => `
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border:1px solid var(--border)">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:${v.color}">${v.name}</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">K/D <strong style="color:var(--text)">${v.kd}</strong> &nbsp; Rating <strong style="color:var(--gold)">${v.rating}</strong></span>
+  </div>
+`).join('');
+
+// ── Charts ──────────────────────────────────────────
+const chartDefaults = {
+  plugins:{ legend:{ labels:{ color:'#52526e', font:{ family:'Barlow Condensed', size:12 } } } },
+  scales:{
+    x:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:10 } } },
+    y:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:10 } } }
+  }
+};
+
+// Grand final map scores
+new Chart(document.getElementById('gfChart'),{
+  type:'bar',
+  data:{
+    labels:['Map 1: Nuke (FaZe pick)','Map 2: Dust2 (Vitality pick)','Map 3: Inferno','Map 4: Overpass'],
+    datasets:[
+      { label:'Vitality', data:[6,13,13,13], backgroundColor:'rgba(248,160,0,0.75)', borderColor:'#f8a000', borderWidth:1.5, borderRadius:3 },
+      { label:'FaZe',     data:[13,3,9,2],   backgroundColor:'rgba(200,16,46,0.6)',  borderColor:'#c8102e', borderWidth:1.5, borderRadius:3 }
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ labels:{ color:'#9090aa', font:{ family:'Barlow Condensed', size:13 } } } },
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:9 } } },
+      y:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:10 } }, max:16, stepSize:4 }
+    }
+  }
+});
+
+// Rating chart
+new Chart(document.getElementById('ratingChart'),{
+  type:'bar',
+  data:{
+    labels:['donk','ZywOo','ropz','mezii','w0nderful','frozen'],
+    datasets:[{
+      data:[1.57,1.38,1.37,1.28,1.24,1.22],
+      backgroundColor:['rgba(139,92,246,0.8)','rgba(248,160,0,0.8)','rgba(34,211,238,0.8)','rgba(168,85,247,0.6)','rgba(0,87,183,0.7)','rgba(200,16,46,0.7)'],
+      borderColor:['#8b5cf6','#f8a000','#22d3ee','#a855f7','#0057b7','#c8102e'],
+      borderWidth:1.5,borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,
+    plugins:{ legend:{ display:false } },
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:10 } }, min:1.1 },
+      y:{ grid:{ display:false }, ticks:{ color:'#9090aa', font:{ family:'Barlow Condensed', size:14, weight:'700' } } }
+    }
+  }
+});
+
+// Map CT/T bars
+const maps = [
+  { name:'Nuke',     ct:62, t:38, maps:8  },
+  { name:'Mirage',   ct:57, t:43, maps:14 },
+  { name:'Overpass', ct:51, t:49, maps:10 },
+  { name:'Inferno',  ct:53, t:47, maps:12 },
+  { name:'Dust2',    ct:50, t:50, maps:9  },
+  { name:'Ancient',  ct:55, t:45, maps:7  },
+];
+document.getElementById('mapBars').innerHTML = maps.map(m => `
+  <div class="mrow">
+    <div class="mname">${m.name}</div>
+    <div class="mbars">
+      <div class="mct" style="width:${m.ct}%">${m.ct}%</div>
+      <div class="mt" style="width:${m.t}%">${m.t}%</div>
+    </div>
+    <div class="mtotal">${m.maps} maps</div>
+  </div>
+`).join('');
+
+// Economy chart
+new Chart(document.getElementById('econChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Full Buy (68%)','Pistol (62%)','Force Buy (47%)','Eco (16%)'],
+    datasets:[{
+      data:[68,62,47,16],
+      backgroundColor:['rgba(34,197,94,0.8)','rgba(34,211,238,0.7)','rgba(240,180,41,0.7)','rgba(239,68,68,0.7)'],
+      borderColor:['#22c55e','#22d3ee','#f0b429','#ef4444'],
+      borderWidth:2,hoverOffset:8
+    }]
+  },
+  options:{
+    responsive:true,cutout:'65%',
+    plugins:{ legend:{ position:'bottom', labels:{ color:'#6b6b8a', font:{ family:'Barlow Condensed', size:12 }, padding:14, boxWidth:12 } } }
+  }
+});
+
+// Overpass round progression
+const vitRounds = [1,2,3,4,5,6,7,8,9,10,11,12,11,12,13];
+const fazeRounds= [0,0,0,0,0,0,0,0,0,0,0,0,1,1,2];
+new Chart(document.getElementById('roundChart'),{
+  type:'line',
+  data:{
+    labels: Array.from({length:15},(_,i)=>`R${i+1}`),
+    datasets:[
+      { label:'Vitality', data:vitRounds, borderColor:'#f8a000', backgroundColor:'rgba(248,160,0,0.1)', borderWidth:2.5, pointRadius:3, pointBackgroundColor:'#f8a000', tension:0.3, fill:true },
+      { label:'FaZe',     data:fazeRounds,borderColor:'#c8102e', backgroundColor:'rgba(200,16,46,0.05)', borderWidth:2, pointRadius:3, pointBackgroundColor:'#c8102e', tension:0.3, fill:true }
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ labels:{ color:'#9090aa', font:{ family:'Barlow Condensed', size:13 } } } },
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:9 } } },
+      y:{ grid:{ color:'rgba(255,255,255,0.03)' }, ticks:{ color:'#52526e', font:{ family:'JetBrains Mono', size:10 } }, min:0, max:14, stepSize:2 }
+    }
+  }
+});
+</script>
+</body>
+</html>
